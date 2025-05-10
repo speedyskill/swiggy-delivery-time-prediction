@@ -22,6 +22,8 @@ response = requests.post(url=predict_url,json=data)
 print("The status code for response is", response.status_code)
 
 if response.status_code == 200:
-    print(f"The prediction value by the API is {float(response.text):.2f} min")
+    result = response.json()
+    print(f"Predicted time: {float(result['prediction']):.2f} min")
+    print(f"Predicted distance: {float(result['distance']):.2f} km")
 else:
-    print("Error:", response.status_code, f"{float(response.text):.2f}")
+    print("Error occurred:", response.text)
