@@ -88,3 +88,4 @@ target/
 
 # virtual environment
 myenv/
+/run_information.json
