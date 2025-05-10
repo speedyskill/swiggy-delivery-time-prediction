@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, validator, Field
 from sklearn.pipeline import Pipeline
 import uvicorn
 import pandas as pd
@@ -8,7 +8,6 @@ import json
 import joblib
 from mlflow import MlflowClient
 from sklearn import set_config
-from scripts.data_clean_utils import perform_data_cleaning
 
 # set the output as pandas
 set_config(transform_output='pandas')
@@ -28,10 +27,10 @@ class Data(BaseModel):
     Delivery_person_ID: str
     Delivery_person_Age: str
     Delivery_person_Ratings: str
-    Restaurant_latitude: float
-    Restaurant_longitude: float
-    Delivery_location_latitude: float
-    Delivery_location_longitude: float
+    Restaurant_latitude: float = Field(..., description="Must be between 8.0 and 37.0 (India)")
+    Restaurant_longitude: float = Field(..., description="Must be between 68.0 and 97.0 (India)")
+    Delivery_location_latitude: float = Field(..., description="Must be between 8.0 and 37.0 (India)")
+    Delivery_location_longitude: float = Field(..., description="Must be between 68.0 and 97.0 (India)")
     Order_Date: str
     Time_Orderd: str
     Time_Order_picked: str
@@ -43,6 +42,18 @@ class Data(BaseModel):
     multiple_deliveries: str
     Festival: str
     City: str
+
+    @validator('Restaurant_latitude', 'Delivery_location_latitude')
+    def validate_latitude(cls, v):
+        if not (8.0 <= v <= 37.0):
+            raise ValueError(f"Latitude must be between 8.0 and 37.0 for India (got {v})")
+        return v
+
+    @validator('Restaurant_longitude', 'Delivery_location_longitude')
+    def validate_longitude(cls, v):
+        if not (68.0 <= v <= 97.0):
+            raise ValueError(f"Longitude must be between 68.0 and 97.0 for India (got {v})")
+        return v
 
     
     
@@ -57,6 +68,28 @@ def load_transformer(transformer_path):
     transformer = joblib.load(transformer_path)
     return transformer
 
+
+from scripts.data_clean_utils import (
+    change_column_names, data_cleaning, clean_lat_long,
+    calculate_haversine_distance, create_distance_type, drop_columns, columns_to_drop
+)
+
+def perform_data_cleaning(data: pd.DataFrame) -> pd.DataFrame:
+    """
+    Modified version of perform_data_cleaning that returns the cleaned DataFrame
+    instead of saving it to a file
+    """
+    cleaned_data = (
+        data
+        .pipe(change_column_names)
+        .pipe(data_cleaning)
+        .pipe(clean_lat_long)
+        .pipe(calculate_haversine_distance)
+        .pipe(create_distance_type)
+        .pipe(drop_columns, columns=columns_to_drop)
+    )
+    
+    return cleaned_data
 
 
 # columns to preprocess in data
@@ -91,7 +124,7 @@ latest_model_ver = client.get_latest_versions(name=model_name,stages=[stage])
 model_path = f"models:/{model_name}/{stage}"
 
 # load the latest model from model registry
-model = mlflow.sklearn.load_model(model_path)
+model = joblib.load('models/model.joblib')
 
 # load the preprocessor
 preprocessor_path = "models/preprocessor.joblib"
@@ -136,12 +169,18 @@ def do_predictions(data: Data):
         'City': data.City
         },index=[0]
     )
+
+    
     # clean the raw input data
     cleaned_data = perform_data_cleaning(pred_data)
     # get the predictions
     predictions = model_pipe.predict(cleaned_data)[0]
 
-    return predictions
+    return {
+    "prediction": round(predictions, 2),
+    "distance": round(float(cleaned_data["distance"].iloc[0]), 2)
+    }
+
    
    
 if __name__ == "__main__":
