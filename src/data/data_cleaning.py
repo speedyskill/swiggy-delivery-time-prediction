@@ -127,6 +127,7 @@ def data_cleaning(data: pd.DataFrame) -> pd.DataFrame:
                                     .str.replace("(min) ","")
                                     .astype(int)))
         .drop(columns=["order_time","order_picked_time"])
+        .query("pickup_time_minutes <= time_taken")
     )
     
     
