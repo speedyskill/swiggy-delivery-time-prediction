@@ -204,4 +204,4 @@ zc.lockfile==3.0.post1
 zipp==3.21.0
 pytest
 requests
-awscli==1.32.37
+awscli==1.32.37  # Upgraded to resolve botocore conflict
