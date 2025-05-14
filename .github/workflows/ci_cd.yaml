@@ -76,10 +76,10 @@ jobs:
           REGISTRY: 476114157013.dkr.ecr.eu-north-1.amazonaws.com
           REPOSITORY: food_delivery_time_prediction
           IMAGE_TAG: latest
-          run: |
-            docker build -t $REPOSITORY .
-            docker tag $REPOSITORY:$IMAGE_TAG $REGISTRY/$REPOSITORY:$IMAGE_TAG
-            docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+        run: |
+          docker build -t $REPOSITORY .
+          docker tag $REPOSITORY:$IMAGE_TAG $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
 
 
