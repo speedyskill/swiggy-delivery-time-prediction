@@ -16,7 +16,11 @@ class DecimalEncoder(json.JSONEncoder):
         return super(DecimalEncoder, self).default(obj)
 
 # API endpoint - configurable
-API_URL = st.sidebar.text_input("API Endpoint", "http://localhost:8000/predict")
+API_URL = st.sidebar.text_input(
+    "API Endpoint",
+    "http://ec2-16-171-132-116.eu-north-1.compute.amazonaws.com/predict"
+)
+
 
 # Initialize Overpass API
 overpass_api = overpy.Overpass()
