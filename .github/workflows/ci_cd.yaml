@@ -60,11 +60,11 @@ jobs:
       - name: Build Docker Image
         if: success()   
         run: |
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/food_delivery_time_prediction:v1 .
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/food_delivery_time_prediction:v2 .
       
       - name: Push Docker Image to Docker Hub
         if: success()
         run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME}}/food_delivery_time_prediction:v1
+          docker push ${{ secrets.DOCKER_HUB_USERNAME}}/food_delivery_time_prediction:v2
 
   
